@@ -13,11 +13,11 @@ const userModel = mongoose.Schema(
 			unique: true,
 		},
 		password: {
-			type: string,
+			type: String,
 			required: true,
 		},
 		pic: {
-			type: string,
+			type: String,
 			required: true,
 			default:
 				"https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
@@ -31,7 +31,12 @@ const userModel = mongoose.Schema(
 	{ timestamps: true }
 )
 
+userModel.methods.comparePassword = async function (candidatePassword) {
+	return await bcrypt.compare(candidatePassword, this.password)
+}
+
 userModel.pre("save", async function (next) {
+	
 	this.password = await bcrypt.hash(this.password, 10)
 })
 
