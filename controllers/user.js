@@ -35,6 +35,7 @@ export const signup = asyncHandler(async (req, res) => {
 })
 
 // @description         login for existing user
+// @route          POST /api/user/login
 export const login = asyncHandler(async (req, res) => {
 	const { email, password } = req.body
 
@@ -63,4 +64,24 @@ export const login = asyncHandler(async (req, res) => {
 	})
 })
 
-export const allUsers = asyncHandler(async () => {})
+// @description 		Seach for users by query
+// @route 				GET /api/user/
+export const allUsers = asyncHandler(async (req,res) => {
+	const query = req.query.search
+	const myId = (req.user && req.user.id) 
+	console.log(myId)
+
+	const keyword = query ? {
+		$or: [
+			{
+				name : {$regex : query , $options : "i"}
+			},
+			{
+				email : {$regex: query , $options: "i"}
+			}
+		]
+	} :{};
+
+	const users = await User.find(keyword).where("_id").ne(myId)
+	res.status(200).json(users)
+})
