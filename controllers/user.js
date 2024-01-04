@@ -3,7 +3,8 @@ import User from "../models/userModel.js"
 import generateToken from "../config/generateToken.js"
 
 // @description    Register a new user
-// @route          POST /api/user/
+// @route          POST /api/user 
+// @payload 		[required : {name, email, password}, optional : {pic}]
 export const signup = asyncHandler(async (req, res) => {
 	const { name, email, password, pic } = req.body
 
@@ -35,7 +36,8 @@ export const signup = asyncHandler(async (req, res) => {
 })
 
 // @description         login for existing user
-// @route          POST /api/user/login
+// @route          		POST /api/user/login
+// payload				[required : {email, password}]
 export const login = asyncHandler(async (req, res) => {
 	const { email, password } = req.body
 
@@ -65,7 +67,7 @@ export const login = asyncHandler(async (req, res) => {
 })
 
 // @description 		Seach for users by query
-// @route 				GET /api/user/
+// @route 				GET /api/user
 export const allUsers = asyncHandler(async (req,res) => {
 	const query = req.query.search
 	const myId = (req.user && req.user.id) 
