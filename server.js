@@ -4,6 +4,7 @@ import connectDB from "./config/db.js"
 import colors from "colors"
 import userRouter from "./routes/user.js"
 import { notFound, errorHandler } from "./middleware/errorHandler.js"
+import protect from "./middleware/autherization.js"
 
 dotenv.config()
 const PORT = process.env.PORT || 5000
