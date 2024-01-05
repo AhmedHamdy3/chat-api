@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000
 const app = express()
 app.use(express.json())
 app.use("/api/user/", userRouter)
-app.use("/api/chat/", protect, chatRouter)
+app.use("/api/chats/", protect, chatRouter)
 app.use(notFound)
 app.use(errorHandler)
 
