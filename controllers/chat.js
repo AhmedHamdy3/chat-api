@@ -186,6 +186,7 @@ export const removeFromGroup = asyncHandler(async (req, res) => {
 		)
 			.populate("users", "-password")
 			.populate("groupAdmin", "-password")
+		console.log(removed)
 	} catch (err) {
 		res.status(404)
 		throw new Error(err.message)

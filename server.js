@@ -7,6 +7,7 @@ import http from "http"
 import cors from "cors"
 import userRouter from "./routes/user.js"
 import chatRouter from "./routes/chat.js"
+import messageRouter from "./routes/message.js"
 import { notFound, errorHandler } from "./middleware/errorHandler.js"
 import protect from "./middleware/autherization.js"
 
@@ -28,6 +29,7 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use("/api/user/", userRouter)
 app.use("/api/chats/", protect, chatRouter)
+app.use("/api/message/", protect, messageRouter)
 app.use(notFound)
 app.use(errorHandler)
 
