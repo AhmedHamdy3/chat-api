@@ -16,6 +16,6 @@ router
 	.post(createGroupChat)
 	.put(renameGroup)
 	.delete(removeFromGroup)
-router.route("group/addmember").put(addToGroup)
+router.route("/group/addmember").put(addToGroup)
 
 export default router
