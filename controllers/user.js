@@ -7,7 +7,7 @@ import generateToken from "../config/generateToken.js"
 // @payload 		[required : {name, email, password}, optional : {pic}]
 export const signup = asyncHandler(async (req, res) => {
 	const { name, email, password, pic } = req.body
-
+	
 	if (!name || !email || !password) {
 		res.status(400)
 		throw new Error("Please enter required fields")

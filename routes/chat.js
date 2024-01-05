@@ -6,6 +6,8 @@ import {
 	addToGroup,
 	removeFromGroup,
 	renameGroup,
+	addAdmin,
+	removeAdmin,
 } from "../controllers/chat.js"
 
 const router = express.Router()
@@ -16,6 +18,7 @@ router
 	.post(createGroupChat)
 	.put(renameGroup)
 	.delete(removeFromGroup)
-router.route("/group/addmember").put(addToGroup)
+router.route("/group/add").put(addToGroup)
+router.route("/group/admin").post(addAdmin).delete(removeAdmin)
 
 export default router

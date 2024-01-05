@@ -100,27 +100,30 @@ export const createGroupChat = asyncHandler(async (req, res) => {
 	}
 
 	users = JSON.parse(users)
-	console.log(users)
+	users.push(myId)
 	const filteredUsers = []
+	const mySet = new Set()
 	for (let id of users) {
 		let isExist = false
 		try {
 			isExist = await User.findById(id)
 		} catch (err) {}
-		if (isExist) filteredUsers.push(id)
+		if (isExist && !mySet.has(id)) {
+			filteredUsers.push(id)
+			mySet.add(id)
+		}
 	}
-	if (filteredUsers.length < 2) {
+	if (filteredUsers.length < 3) {
 		res.status(400)
 		throw new Error("More than 2 users are required to form a group chat")
 	}
-	filteredUsers.push(myId)
 
 	try {
 		const groupChat = await Chat.create({
 			chatName: name,
 			isGroupChat: true,
 			users: filteredUsers,
-			groupAdmin: req.user,
+			groupAdmin: [req.user],
 		})
 		const fullChat = await Chat.findById(groupChat._id)
 			.populate("users", "-password")
@@ -133,10 +136,13 @@ export const createGroupChat = asyncHandler(async (req, res) => {
 	}
 })
 // @description      Add members to group chat
-// @route            PUT api/chats/group/addmember
+// @route            PUT api/chats/group/add
 // @payload          required => {usersIds: list[ObjectId] , groupId: ObjectId}
 export const addToGroup = asyncHandler(async (req, res) => {
 	const { usersIds, groupId } = req.body
+	const myId = req.user && req.user.id
+	// check if you are an admin
+	await checkAdmin(req, res)
 
 	const ids = JSON.parse(usersIds)
 	let added
@@ -166,14 +172,15 @@ export const addToGroup = asyncHandler(async (req, res) => {
 // @payload          required => {usersIds: list[ObjectId] , groupId: ObjectId}
 export const removeFromGroup = asyncHandler(async (req, res) => {
 	const { usersIds, groupId } = req.body
-
+	const myId = req.user && req.user.id
+	await checkAdmin(req, res)
 	const ids = JSON.parse(usersIds)
 	let removed
 	try {
 		removed = await Chat.findByIdAndUpdate(
 			groupId,
 			{
-				$pull: { users: { $in: ids } },
+				$pull: { users: { $in: ids }, groupAdmin: { $in: ids } },
 			},
 			{ new: true }
 		)
@@ -213,4 +220,105 @@ export const renameGroup = asyncHandler(async (req, res) => {
 		throw new Error("Chat not found")
 	}
 	res.status(200).json(updated)
+})
+
+// @description      Make a member as admin
+// @route            POST api/chats/group/admin
+// @payload          required => {usersIds: list[ObjectId] , groupId: ObjectId}
+export const addAdmin = asyncHandler(async (req, res) => {
+	let { usersIds, groupId } = req.body
+	// check if you already admin
+	const groupChat = await checkAdmin(req, res)
+
+	usersIds = JSON.parse(usersIds)
+
+	const isUsersFromChat = usersIds.every((id) =>
+		groupChat.users.some((userId) => userId == id)
+	)
+	if (!isUsersFromChat) {
+		res.status(400)
+		throw new Error("All users must exist in the chat to be admins")
+	}
+	console.log(groupChat)
+	const updated = await Chat.findByIdAndUpdate(
+		groupId,
+		{
+			$addToSet: { groupAdmin: { $each: usersIds } },
+		},
+		{ new: true }
+	)
+		.populate("users", "-password")
+		.populate("groupAdmin", "-password")
+	res.status(200).json(updated)
+})
+// @description      Make a member as admin
+// @route            DELETE api/chats/group/admin
+// @payload          required => {usersIds: list[ObjectId] , groupId: ObjectId}
+export const removeAdmin = asyncHandler(async (req, res) => {
+	let { usersIds, groupId } = req.body
+	// check if you already admin
+	const groupChat = await checkAdmin(req, res)
+
+	usersIds = JSON.parse(usersIds)
+
+	const isUsersFromChat = usersIds.every((id) =>
+		groupChat.users.some((userId) => userId == id)
+	)
+	if (!isUsersFromChat) {
+		res.status(400)
+		throw new Error("All users must exist in the chat to remove from admins")
+	}
+
+	const allAminsToBeRemoved = groupChat.groupAdmin.every((admin) =>
+		usersIds.some((id) => id == admin)
+	)
+	if (allAminsToBeRemoved) {
+		res.status(400)
+		throw new Error("Can't remove All admins")
+	}
+
+	const updated = await Chat.findByIdAndUpdate(
+		groupId,
+		{
+			$pull: { groupAdmin: { $in: usersIds } },
+		},
+		{ new: true }
+	)
+		.populate("users", "-password")
+		.populate("groupAdmin", "-password")
+	res.status(200).json(updated)
+})
+
+// static methods => checks if you already admin and returns the chat group
+const checkAdmin = asyncHandler(async (req, res) => {
+	const { usersIds, groupId } = req.body
+	const myId = req.user && req.user.id
+	if (!groupId) {
+		res.status(400)
+		throw new Error("group id must be provided")
+	}
+	if (!usersIds) {
+		res.status(400)
+		throw new Error("no users provided")
+	}
+
+	let findGroupChat
+	try {
+		findGroupChat = await Chat.findById(groupId)
+	} catch (err) {
+		res.status(404)
+		throw new Error("This chat does not exist")
+	}
+	if (!findGroupChat) {
+		res.status(404)
+		throw new Error("This chat does not exist")
+	}
+	const isAdmin = findGroupChat.groupAdmin.some((admin) => admin == myId)
+	if (!isAdmin) {
+		return res.status(400).json({
+			success: false,
+			message: "Only admins can remove members from group chat",
+		})
+	}
+	return findGroupChat
 })
