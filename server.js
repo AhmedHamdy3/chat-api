@@ -16,14 +16,15 @@ const PORT = process.env.PORT || 5000
 const corsOptions = {
 	origin: process.env.FRONT_END_URL,
 	methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-	credentials: true, // enable set cookie
-	optionsSuccessStatus: 204,
 }
-
+console.log(corsOptions)
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
 	cors: corsOptions,
+	methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+	credentials: true, // Enable cookies and HTTP authentication information
+	optionsSuccessStatus: 204, // Some legacy browsers (IE11, various SmartTVs) choke on 204
 })
 app.use(cors(corsOptions))
 app.use(express.json())
