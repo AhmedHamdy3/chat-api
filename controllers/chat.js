@@ -142,7 +142,7 @@ export const addToGroup = asyncHandler(async (req, res) => {
 	const { usersIds, groupId } = req.body
 	const myId = req.user && req.user.id
 	// check if you are an admin
-	await checkAdmin(req, res)
+	await checkAdmin("Only admins can add members from group chat",req, res)
 
 	const ids = JSON.parse(usersIds)
 	let added
@@ -173,7 +173,7 @@ export const addToGroup = asyncHandler(async (req, res) => {
 export const removeFromGroup = asyncHandler(async (req, res) => {
 	const { usersIds, groupId } = req.body
 	const myId = req.user && req.user.id
-	await checkAdmin(req, res)
+	await checkAdmin("Only admins can remove members from group chat",req, res)
 	const ids = JSON.parse(usersIds)
 	let removed
 	try {
@@ -229,7 +229,7 @@ export const renameGroup = asyncHandler(async (req, res) => {
 export const addAdmin = asyncHandler(async (req, res) => {
 	let { usersIds, groupId } = req.body
 	// check if you already admin
-	const groupChat = await checkAdmin(req, res)
+	const groupChat = await checkAdmin("Only admins can add admins from group chat",req, res)
 
 	usersIds = JSON.parse(usersIds)
 
@@ -258,7 +258,11 @@ export const addAdmin = asyncHandler(async (req, res) => {
 export const removeAdmin = asyncHandler(async (req, res) => {
 	let { usersIds, groupId } = req.body
 	// check if you already admin
-	const groupChat = await checkAdmin(req, res)
+	const groupChat = await checkAdmin(
+		"Only admins can remove admins from group chat",
+		req,
+		res
+	)
 
 	usersIds = JSON.parse(usersIds)
 
@@ -291,7 +295,7 @@ export const removeAdmin = asyncHandler(async (req, res) => {
 })
 
 // static methods => checks if you already admin and returns the chat group
-const checkAdmin = asyncHandler(async (req, res) => {
+const checkAdmin = asyncHandler(async (err, req, res) => {
 	const { usersIds, groupId } = req.body
 	const myId = req.user && req.user.id
 	if (!groupId) {
@@ -315,10 +319,11 @@ const checkAdmin = asyncHandler(async (req, res) => {
 		throw new Error("This chat does not exist")
 	}
 	const isAdmin = findGroupChat.groupAdmin.some((admin) => admin == myId)
+	console.log(isAdmin)
 	if (!isAdmin) {
 		return res.status(400).json({
 			success: false,
-			message: "Only admins can remove members from group chat",
+			message: err, 
 		})
 	}
 	return findGroupChat
