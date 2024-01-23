@@ -53,7 +53,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
 		})
 
 		const chat = await Chat.findByIdAndUpdate(chatId, { latestMessage: message }, {new : true })
-        console.log(chat)
 		res.status(200).json(message)
 	} catch (err) {
 		res.status(400)

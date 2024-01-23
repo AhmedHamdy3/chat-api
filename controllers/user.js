@@ -71,7 +71,6 @@ export const login = asyncHandler(async (req, res) => {
 export const allUsers = asyncHandler(async (req,res) => {
 	const query = req.query.search
 	const myId = (req.user && req.user.id) 
-	console.log(myId)
 
 	const keyword = query ? {
 		$or: [

@@ -76,12 +76,10 @@ export const accessChats = asyncHandler(async (req, res) => {
 	// Create the new chat for the first time
 	try {
 		const createdChat = await Chat.create(chatData)
-		console.log(createdChat)
 		const fullChat = await Chat.findOne({ _id: createdChat._id }).populate(
 			"users",
 			"-password"
 		)
-		console.log(fullChat)
 		res.status(200).json(fullChat)
 	} catch (err) {
 		res.status(400)
@@ -186,7 +184,6 @@ export const removeFromGroup = asyncHandler(async (req, res) => {
 		)
 			.populate("users", "-password")
 			.populate("groupAdmin", "-password")
-		console.log(removed)
 	} catch (err) {
 		res.status(404)
 		throw new Error(err.message)
@@ -240,7 +237,6 @@ export const addAdmin = asyncHandler(async (req, res) => {
 		res.status(400)
 		throw new Error("All users must exist in the chat to be admins")
 	}
-	console.log(groupChat)
 	const updated = await Chat.findByIdAndUpdate(
 		groupId,
 		{
@@ -319,7 +315,6 @@ const checkAdmin = asyncHandler(async (err, req, res) => {
 		throw new Error("This chat does not exist")
 	}
 	const isAdmin = findGroupChat.groupAdmin.some((admin) => admin == myId)
-	console.log(isAdmin)
 	if (!isAdmin) {
 		return res.status(400).json({
 			success: false,
