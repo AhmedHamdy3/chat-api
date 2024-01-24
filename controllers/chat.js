@@ -171,8 +171,53 @@ export const addToGroup = asyncHandler(async (req, res) => {
 export const removeFromGroup = asyncHandler(async (req, res) => {
 	const { usersIds, groupId } = req.body
 	const myId = req.user && req.user.id
-	await checkAdmin("Only admins can remove members from group chat",req, res)
 	const ids = JSON.parse(usersIds)
+
+	let chat
+	try {
+		chat = await Chat.findById(groupId)
+	} catch (err) {
+		throw new Error("Can't find the group chat, something went wrong")
+	}
+	console.log(chat)
+
+	// Leave group
+	const isLeaving = ids.some((id) => id == myId)
+	if (isLeaving) {
+		if (chat.groupAdmin.some((adminId) => adminId == myId)) {
+			if (chat.users.length == 1) {
+				try {
+					const deleted = await Chat.findByIdAndDelete(groupId, { new: true })
+					return res.json({
+						success: true,
+						message: "The group has been deleted",
+					})
+				} catch (err) {
+					throw new Error("Can't delete the group, something went wrong")
+				}
+			}
+			if (chat.groupAdmin.length == 1) {
+				throw new Error(
+					"You must select another member to be admin to leave the group"
+				)
+			}
+		} else {
+			const left = await Chat.findByIdAndUpdate(
+				groupId,
+				{
+					$pull: {
+						users: { $eq: myId },
+					},
+				},
+				{ new: true }
+			)
+			return res
+				.status(200)
+				.json({ success: true, message: "You left this group successfully" })
+		}
+	}
+
+	await checkAdmin("Only admins can remove members from group chat", req, res)
 	let removed
 	try {
 		removed = await Chat.findByIdAndUpdate(
