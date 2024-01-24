@@ -31,12 +31,13 @@ app.use(express.json())
 app.use("/api/user/", userRouter)
 app.use("/api/chats/", protect, chatRouter)
 app.use("/api/message/", protect, messageRouter)
-app.use(notFound)
-app.use(errorHandler)
 
 app.get("/", (req, res) => {
 	res.send("testing...")
 })
+
+app.use(notFound)
+app.use(errorHandler)
 
 io.on("connection", (socket) => {
 	socket.on("setup", (userData) => {
@@ -59,10 +60,10 @@ io.on("connection", (socket) => {
 			socket.to(user._id).emit("messageReceived",messageRecieved)
 		})
 	})
-	// socket.off("setup", ()=> {
-	// 	console.log("User disconnected")
-	// 	socket.leave(userData._id)
-	// })
+	socket.off("setup", ()=> {
+		console.log("User disconnected")
+		socket.leave(userData._id)
+	})
 })
 
 
