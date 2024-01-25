@@ -41,29 +41,22 @@ app.use(errorHandler)
 
 io.on("connection", (socket) => {
 	socket.on("setup", (userData) => {
-		socket.join(userData.id)
+		// socket.join(userData.id)
 		socket.emit("connected")
 	})
 
-	socket.on("joinChat", (room) => {
-		socket.join(room)
-	})
+	socket.on("joinChat", (room) => socket.join(room))
 
-	socket.on("typing", (room) => socket.to(room).emit("typing"))
-	socket.on("stopTyping", (room) => socket.to(room).emit("stopTyping"))
+	socket.on("typing", (room) => socket.to(room).emit("ftyping"))
+	socket.on("stopTyping", (room) => socket.to(room).emit("fstopTyping"))
 
-	socket.on("newMessage", (messageRecieved) => {
-		let chat = messageRecieved.chat
-		if (!chat.users) return console.log("chat users not defined")
-		chat.users.forEach((user) => {
-			if (user._id == messageRecieved.sender._id) return
-			socket.to(user._id).emit("messageReceived",messageRecieved)
-		})
-	})
-	socket.off("setup", ()=> {
-		console.log("User disconnected")
-		socket.leave(userData._id)
-	})
+	socket.on("newMessage", (messageRecieved) =>
+		socket.to(messageRecieved.chat._id).emit("messageReceived", messageRecieved)
+	)
+	// socket.off("setup", ()=> {
+	// 	console.log("User disconnected")
+	// 	socket.leave(userData._id)
+	// })
 })
 
 
