@@ -41,7 +41,7 @@ app.use(errorHandler)
 
 io.on("connection", (socket) => {
 	socket.on("setup", (userData) => {
-		// socket.join(userData.id)
+		socket.join(userData.id)
 		socket.emit("connected")
 	})
 
@@ -50,9 +50,17 @@ io.on("connection", (socket) => {
 	socket.on("typing", (room) => socket.to(room).emit("ftyping"))
 	socket.on("stopTyping", (room) => socket.to(room).emit("fstopTyping"))
 
-	socket.on("newMessage", (messageRecieved) =>
-		socket.to(messageRecieved.chat._id).emit("messageReceived", messageRecieved)
-	)
+	socket.on("newMessage", (messageRecieved) => {
+		console.log(messageRecieved)
+		const users = messageRecieved.chat.users
+		console.log(users, messageRecieved.sender)
+		users.forEach((user) => {
+			if (user._id != messageRecieved.sender._id) {
+				socket.to(user._id).emit("messageReceived", messageRecieved)
+			}
+		})
+		// socket.to(messageRecieved.chat._id).emit("messageReceived", messageRecieved)
+	})
 	// socket.off("setup", ()=> {
 	// 	console.log("User disconnected")
 	// 	socket.leave(userData._id)
